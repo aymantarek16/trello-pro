@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Plus, MoreHorizontal, Star, Trash2 } from "lucide-react";
 import { useBoardStore } from "@/store/useBoardStore";
 import { useToastStore } from "@/store/useToastStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 const boardColors = [
@@ -20,7 +20,13 @@ const boardColors = [
 
 export default function BoardsPage() {
   const searchParams = useSearchParams();
-  const filter = searchParams.get("filter");
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  const filter = isClient ? searchParams.get("filter") : null;
   const { boards, createBoard, deleteBoard, toggleStarBoard } = useBoardStore();
   const { success, error } = useToastStore();
   const [isCreating, setIsCreating] = useState(false);
@@ -163,7 +169,7 @@ export default function BoardsPage() {
               className="block h-full"
             >
               {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${board.color} opacity-90 group-hover:opacity-100 transition-opacity`} />
+              <div className={`absolute inset-0 bg-linear-to-br ${board.color} opacity-90 group-hover:opacity-100 transition-opacity`} />
 
               {/* Pattern Overlay */}
               <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
@@ -197,7 +203,7 @@ export default function BoardsPage() {
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                       {showDeleteMenu === board.id && (
-                        <div className="absolute right-0 top-8 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 min-w-[120px]">
+                        <div className="absolute right-0 top-8 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 min-w-30">
                           <button
                             onClick={(e) => handleDeleteBoard(board.id, e)}
                             className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
