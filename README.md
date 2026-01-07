@@ -7,7 +7,7 @@ A modern task management web application inspired by Trello, built to help indiv
 ---
 
 ## 🌐 Live Demo
-👉 https://trello-pro-nine.vercel.app/
+👉 https://trello-pro-nine.vercel.app
 
 ---
 
