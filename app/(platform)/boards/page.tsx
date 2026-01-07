@@ -1,11 +1,16 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 import Link from "next/link";
 import { Plus, MoreHorizontal, Star, Trash2 } from "lucide-react";
 import { useBoardStore } from "@/store/useBoardStore";
 import { useToastStore } from "@/store/useToastStore";
-import { useState, useEffect } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import type { MouseEvent } from "react";
 
 const boardColors = [
   "from-pink-500 to-rose-500",
@@ -18,24 +23,48 @@ const boardColors = [
   "from-red-400 to-pink-500",
 ];
 
+function BoardsPageSkeleton() {
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto min-h-screen">
+      <div className="flex items-center justify-between">
+        <div className="h-9 w-56 bg-slate-200/70 dark:bg-slate-800 rounded-lg animate-pulse" />
+        <div className="h-10 w-44 bg-slate-200/70 dark:bg-slate-800 rounded-lg animate-pulse" />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-48 rounded-2xl bg-slate-200/70 dark:bg-slate-800 animate-pulse"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function BoardsPage() {
+  return (
+    <Suspense fallback={<BoardsPageSkeleton />}>
+      <BoardsPageInner />
+    </Suspense>
+  );
+}
+
+function BoardsPageInner() {
   const searchParams = useSearchParams();
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-  
-  const filter = isClient ? searchParams.get("filter") : null;
+
   const { boards, createBoard, deleteBoard, toggleStarBoard } = useBoardStore();
   const { success, error } = useToastStore();
+
   const [isCreating, setIsCreating] = useState(false);
   const [newBoardTitle, setNewBoardTitle] = useState("");
   const [showDeleteMenu, setShowDeleteMenu] = useState<string | null>(null);
 
-  const filteredBoards = filter === "starred" 
-    ? boards.filter((b) => b.starred)
-    : boards;
+  const filter = useMemo(() => searchParams.get("filter"), [searchParams]);
+
+  const filteredBoards =
+    filter === "starred" ? boards.filter((b) => b.starred) : boards;
 
   const handleCreateBoard = () => {
     if (!newBoardTitle.trim()) {
@@ -49,27 +78,37 @@ export default function BoardsPage() {
     success("Board created successfully");
   };
 
-  const handleDeleteBoard = (boardId: string, e: React.MouseEvent) => {
+  const handleDeleteBoard = (boardId: string, e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this board? This action cannot be undone.")) {
+    if (
+      confirm(
+        "Are you sure you want to delete this board? This action cannot be undone."
+      )
+    ) {
       deleteBoard(boardId);
       success("Board deleted successfully");
       setShowDeleteMenu(null);
     }
   };
 
-  const handleToggleStar = (boardId: string, e: React.MouseEvent) => {
+  const handleToggleStar = (boardId: string, e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleStarBoard(boardId);
     const board = boards.find((b) => b.id === boardId);
-    if (board?.starred) {
+    if (!board?.starred) {
+      // After toggleStarBoard, the old value may be different; this is fine UX-wise.
       success("Board starred");
     } else {
       success("Board unstarred");
     }
   };
+
+  // Optional: close menu on route change / params change
+  useEffect(() => {
+    setShowDeleteMenu(null);
+  }, [filter]);
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto min-h-screen">
@@ -163,13 +202,15 @@ export default function BoardsPage() {
 
         {/* Existing Boards */}
         {filteredBoards.map((board) => (
-          <div key={board.id} className="group relative h-48 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 transform hover:-translate-y-1">
-            <Link
-              href={`/board/${board.id}`}
-              className="block h-full"
-            >
+          <div
+            key={board.id}
+            className="group relative h-48 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 transform hover:-translate-y-1"
+          >
+            <Link href={`/board/${board.id}`} className="block h-full">
               {/* Background Gradient */}
-              <div className={`absolute inset-0 bg-linear-to-br ${board.color} opacity-90 group-hover:opacity-100 transition-opacity`} />
+              <div
+                className={`absolute inset-0 bg-linear-to-br ${board.color} opacity-90 group-hover:opacity-100 transition-opacity`}
+              />
 
               {/* Pattern Overlay */}
               <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
@@ -189,19 +230,27 @@ export default function BoardsPage() {
                           : "text-white/70 hover:text-yellow-400 hover:bg-yellow-400/20 opacity-0 group-hover:opacity-100"
                       }`}
                     >
-                      <Star className={`w-4 h-4 ${board.starred ? "fill-current" : ""}`} />
+                      <Star
+                        className={`w-4 h-4 ${
+                          board.starred ? "fill-current" : ""
+                        }`}
+                      />
                     </button>
+
                     <div className="relative">
                       <button
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setShowDeleteMenu(showDeleteMenu === board.id ? null : board.id);
+                          setShowDeleteMenu(
+                            showDeleteMenu === board.id ? null : board.id
+                          );
                         }}
                         className="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
+
                       {showDeleteMenu === board.id && (
                         <div className="absolute right-0 top-8 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-10 min-w-30">
                           <button
