@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+    <main className="flex min-h-screen flex-col items-center justify-center p-24 gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10">
       <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-6xl mb-4">
         Trello Pro
       </h1>
