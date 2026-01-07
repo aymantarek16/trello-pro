@@ -2,7 +2,7 @@
 
 A modern task management web application inspired by Trello, built to help individuals and teams organize work, track progress, and boost productivity through a clean and interactive interface.
 
-![Trello Pro Preview](./public/trello.png)
+![Trello Pro Preview](./trello.png)
 
 ---
 
